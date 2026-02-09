@@ -57,7 +57,7 @@ public class MulticoreImageProcessor {
 
             Duration duration = Duration.between(beginning, Instant.now());
 
-            log.info("Обработка завершена за {} миллисекунд с {} потоками.", duration.toMillis(), numThreads);
+            log.info("{} потока(ов) завершили обработку за {} миллисекунд.", numThreads, duration.toMillis());
         } catch (IOException | InterruptedException | ExecutionException e) {
             log.error("Ошибка обработки: {}", e.getMessage());
         }
@@ -96,7 +96,6 @@ public class MulticoreImageProcessor {
         if (!executor.awaitTermination(TIMEOUT_SEC, TimeUnit.SECONDS)) {
             throw new RuntimeException("Прошло " + TIMEOUT_SEC + " секунд. Прекращение работы...");
         }
-        log.info("Обработка завершена");
 
         return result;
     }
@@ -185,7 +184,6 @@ public class MulticoreImageProcessor {
         if (!executor.awaitTermination(TIMEOUT_SEC, TimeUnit.SECONDS)) {
             throw new RuntimeException("Прошло " + TIMEOUT_SEC + " секунд. Прекращение работы...");
         }
-        log.info("Даунскейлинг завершен");
 
         return result;
     }
