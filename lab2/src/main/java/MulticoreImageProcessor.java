@@ -21,6 +21,7 @@ public class MulticoreImageProcessor {
     private static final int DIVISOR = 1;
     private static final int OFFSET = 128;
     private static final int BLOCK_SIZE = 32;
+    private static final int TIMEOUT_SEC = 30;
 
     public static void main(String[] args) {
         if (args.length != 2) {
@@ -35,6 +36,7 @@ public class MulticoreImageProcessor {
     }
 
     private static void processImage(String[] args) {
+        log.info("Запущена обработка файла {} на {} потоках", args[0], args[2]);
         String inputPath = args[0];
         String outputPath = args[1];
         int numThreads = Integer.parseInt(args[2]);
@@ -42,7 +44,7 @@ public class MulticoreImageProcessor {
         try {
             BufferedImage original = ImageIO.read(new File(inputPath));
             if (original == null) {
-                log.error("Не удалось загрузить изображение: " + inputPath);
+                log.error("Не удалось загрузить изображение: {}", inputPath);
                 return;
             }
 
@@ -55,9 +57,9 @@ public class MulticoreImageProcessor {
 
             Duration duration = Duration.between(beginning, Instant.now());
 
-            log.info("Обработка завершена за {} с {} потоками.", duration, numThreads);
+            log.info("Обработка завершена за {} миллисекунд с {} потоками.", duration.toMillis(), numThreads);
         } catch (IOException | InterruptedException | ExecutionException e) {
-            System.err.println("Ошибка обработки: " + e.getMessage());
+            log.error("Ошибка обработки: {}", e.getMessage());
         }
     }
 
@@ -90,9 +92,11 @@ public class MulticoreImageProcessor {
             future.get();
         }
         executor.shutdown();
-        if (executor.awaitTermination(10, TimeUnit.SECONDS)) {
-            throw new RuntimeException("Прошло 10 секунд. Прекращение работы...");
+
+        if (!executor.awaitTermination(TIMEOUT_SEC, TimeUnit.SECONDS)) {
+            throw new RuntimeException("Прошло " + TIMEOUT_SEC + " секунд. Прекращение работы...");
         }
+        log.info("Обработка завершена");
 
         return result;
     }
@@ -118,7 +122,7 @@ public class MulticoreImageProcessor {
             for (int kx = -halfKernel; kx <= halfKernel; kx++) {
                 int x = cx + kx;
                 int y = cy + ky;
-                int kValue = MulticoreImageProcessor.EMBOSS_KERNEL[ky + halfKernel][kx + halfKernel];
+                int kValue = EMBOSS_KERNEL[ky + halfKernel][kx + halfKernel];
 
                 int rgb = getPixelRGB(image, x, y);
                 int r = (rgb >> 16) & 0xFF;
@@ -178,9 +182,10 @@ public class MulticoreImageProcessor {
             future.get();
         }
         executor.shutdown();
-        if (executor.awaitTermination(10, TimeUnit.SECONDS)) {
-            throw new RuntimeException("Прошло 10 секунд. Прекращение работы...");
+        if (!executor.awaitTermination(TIMEOUT_SEC, TimeUnit.SECONDS)) {
+            throw new RuntimeException("Прошло " + TIMEOUT_SEC + " секунд. Прекращение работы...");
         }
+        log.info("Даунскейлинг завершен");
 
         return result;
     }
