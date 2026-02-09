@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.concurrent.*;
 
 @Slf4j
-public class MulticoreImageProcessor {
+public class MulticoreReliefImageProcessor {
     private static final int[][] EMBOSS_KERNEL = {
             {-2, -1, 0},
             {-1,  1, 1},
@@ -25,7 +25,7 @@ public class MulticoreImageProcessor {
 
     public static void main(String[] args) {
         if (args.length != 2) {
-            log.error("Использование: java MultiThreadedImageReliefProcessor <input.jpg> <output.jpg>");
+            log.error("Использование: java MulticoreReliefImageProcessor <input.jpg> <output.jpg>");
             return;
         }
 
