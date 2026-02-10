@@ -1,3 +1,5 @@
+package cluster;
+
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReaderBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -57,6 +59,8 @@ public class MulticoreSilhouetteProcessor {
                         );
                     }
                     System.out.println();
+
+                    ClusterVisualizer.addData(clusters, data, k);
                 }
                 System.out.println();
             } catch (IOException e) {
@@ -65,6 +69,8 @@ public class MulticoreSilhouetteProcessor {
                 log.error("Ошибка при вычислении силуэта: {}", e.getMessage());
             }
         }
+
+        ClusterVisualizer.visualize();
     }
 
     private static RealMatrix loadAndNormalizeData(String csvPath, int sampleSize) throws IOException {
