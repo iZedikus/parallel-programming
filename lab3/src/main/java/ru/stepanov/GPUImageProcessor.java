@@ -132,23 +132,169 @@ public class GPUImageProcessor {
             cl_platform_id[] platforms = new cl_platform_id[numPlatforms[0]];
             clGetPlatformIDs(platforms.length, platforms, null);
 
+            log.debug("Найдено платформ OpenCL: {}", platforms.length);
+
+            for (int i = 0; i < platforms.length; i++) {
+                cl_platform_id platform = platforms[i];
+
+                // Получаем информацию о платформе
+                long[] size = new long[1];
+
+                // Имя платформы
+                clGetPlatformInfo(platform, CL_PLATFORM_NAME, 0, null, size);
+                byte[] nameBytes = new byte[(int)size[0]];
+                clGetPlatformInfo(platform, CL_PLATFORM_NAME, nameBytes.length, Pointer.to(nameBytes), null);
+                String platformName = new String(nameBytes, 0, nameBytes.length - 1);
+
+                // Вендор платформы
+                clGetPlatformInfo(platform, CL_PLATFORM_VENDOR, 0, null, size);
+                byte[] vendorBytes = new byte[(int)size[0]];
+                clGetPlatformInfo(platform, CL_PLATFORM_VENDOR, vendorBytes.length, Pointer.to(vendorBytes), null);
+                String platformVendor = new String(vendorBytes, 0, vendorBytes.length - 1);
+
+                // Версия платформы
+                clGetPlatformInfo(platform, CL_PLATFORM_VERSION, 0, null, size);
+                byte[] versionBytes = new byte[(int)size[0]];
+                clGetPlatformInfo(platform, CL_PLATFORM_VERSION, versionBytes.length, Pointer.to(versionBytes), null);
+                String platformVersion = new String(versionBytes, 0, versionBytes.length - 1);
+
+                log.debug("Платформа {}: {}", i, platformName);
+                log.debug("  Вендор: {}", platformVendor);
+                log.debug("  Версия: {}", platformVersion);
+
+                // Получаем устройства для этой платформы
+                int[] numDevices = new int[1];
+                clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, 0, null, numDevices);
+
+                if (numDevices[0] > 0) {
+                    cl_device_id[] devices = new cl_device_id[numDevices[0]];
+                    clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, devices.length, devices, null);
+
+                    for (int j = 0; j < devices.length; j++) {
+                        cl_device_id device = devices[j];
+
+                        // Тип устройства
+                        long[] deviceType = new long[1];
+                        clGetDeviceInfo(device, CL_DEVICE_TYPE, Sizeof.cl_long, Pointer.to(deviceType), null);
+                        String typeStr;
+                        if ((deviceType[0] & CL_DEVICE_TYPE_GPU) != 0) {
+                            typeStr = "GPU";
+                        } else if ((deviceType[0] & CL_DEVICE_TYPE_CPU) != 0) {
+                            typeStr = "CPU";
+                        } else if ((deviceType[0] & CL_DEVICE_TYPE_ACCELERATOR) != 0) {
+                            typeStr = "ACCELERATOR";
+                        } else {
+                            typeStr = "OTHER";
+                        }
+
+                        // Имя устройства
+                        clGetDeviceInfo(device, CL_DEVICE_NAME, 0, null, size);
+                        byte[] deviceNameBytes = new byte[(int)size[0]];
+                        clGetDeviceInfo(device, CL_DEVICE_NAME, deviceNameBytes.length, Pointer.to(deviceNameBytes), null);
+                        String deviceName = new String(deviceNameBytes, 0, deviceNameBytes.length - 1);
+
+                        // Вендор устройства
+                        clGetDeviceInfo(device, CL_DEVICE_VENDOR, 0, null, size);
+                        byte[] deviceVendorBytes = new byte[(int)size[0]];
+                        clGetDeviceInfo(device, CL_DEVICE_VENDOR, deviceVendorBytes.length, Pointer.to(deviceVendorBytes), null);
+                        String deviceVendor = new String(deviceVendorBytes, 0, deviceVendorBytes.length - 1);
+
+                        // Версия драйвера
+                        clGetDeviceInfo(device, CL_DEVICE_VERSION, 0, null, size);
+                        byte[] driverVersionBytes = new byte[(int)size[0]];
+                        clGetDeviceInfo(device, CL_DEVICE_VERSION, driverVersionBytes.length, Pointer.to(driverVersionBytes), null);
+                        String driverVersion = new String(driverVersionBytes, 0, driverVersionBytes.length - 1);
+
+                        // Максимальная глобальная память
+                        long[] globalMemSize = new long[1];
+                        clGetDeviceInfo(device, CL_DEVICE_GLOBAL_MEM_SIZE, Sizeof.cl_long, Pointer.to(globalMemSize), null);
+
+                        // Максимальная локальная память
+                        long[] localMemSize = new long[1];
+                        clGetDeviceInfo(device, CL_DEVICE_LOCAL_MEM_SIZE, Sizeof.cl_long, Pointer.to(localMemSize), null);
+
+                        // Максимальный размер рабочей группы
+                        long[] maxWorkGroupSize = new long[1];
+                        clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_GROUP_SIZE, Sizeof.cl_long, Pointer.to(maxWorkGroupSize), null);
+
+                        // Максимальные размеры глобальной рабочей области
+                        long[] maxWorkItemSizes = new long[3];
+                        clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_ITEM_SIZES, Sizeof.cl_long * 3, Pointer.to(maxWorkItemSizes), null);
+
+                        // Количество вычислительных блоков
+                        long[] maxComputeUnits = new long[1];
+                        clGetDeviceInfo(device, CL_DEVICE_MAX_COMPUTE_UNITS, Sizeof.cl_long, Pointer.to(maxComputeUnits), null);
+
+                        // Поддержка OpenCL C
+                        byte[] openclCVersionBytes = new byte[128];
+                        clGetDeviceInfo(device, CL_DEVICE_OPENCL_C_VERSION, openclCVersionBytes.length, Pointer.to(openclCVersionBytes), null);
+                        String openclCVersion = new String(openclCVersionBytes).trim();
+
+                        log.debug("    Устройство {}: {} ({})", j, deviceName, typeStr);
+                        log.debug("      Вендор: {}", deviceVendor);
+                        log.debug("      Версия: {}", driverVersion);
+                        log.debug("      OpenCL C версия: {}", openclCVersion);
+                        log.debug("      Глобальная память: {} MB", globalMemSize[0] / (1024 * 1024));
+                        log.debug("      Локальная память: {} KB", localMemSize[0] / 1024);
+                        log.debug("      Макс. размер рабочей группы: {}", maxWorkGroupSize[0]);
+                        log.debug("      Макс. размеры рабочей области: [{}, {}, {}]",
+                                maxWorkItemSizes[0], maxWorkItemSizes[1], maxWorkItemSizes[2]);
+                        log.debug("      Кол-во вычислительных блоков: {}", maxComputeUnits[0]);
+
+                        // Проверка доступности
+                        long[] available = new long[1];
+                        clGetDeviceInfo(device, CL_DEVICE_AVAILABLE, Sizeof.cl_long, Pointer.to(available), null);
+                        log.debug("      Доступно: {}", available[0] != 0);
+                    }
+                }
+            }
+
+            // Выбираем первую платформу с GPU
             cl_platform_id platform = platforms[0];
+            boolean gpuFound = false;
+
+            for (cl_platform_id plat : platforms) {
+                int[] numDevices = new int[1];
+                clGetDeviceIDs(plat, CL_DEVICE_TYPE_GPU, 0, null, numDevices);
+
+                if (numDevices[0] > 0) {
+                    platform = plat;
+                    gpuFound = true;
+                    break;
+                }
+            }
+
+            if (!gpuFound) {
+                log.warn("GPU не найдено, используем CPU устройство");
+            }
 
             // Создаем контекст
             cl_context_properties contextProperties = new cl_context_properties();
             contextProperties.addProperty(CL_CONTEXT_PLATFORM, platform);
 
-            context = clCreateContextFromType(contextProperties,
-                    CL_DEVICE_TYPE_GPU, null, null, null);
+            if (gpuFound) {
+                context = clCreateContextFromType(contextProperties,
+                        CL_DEVICE_TYPE_GPU, null, null, null);
+            } else {
+                context = clCreateContextFromType(contextProperties,
+                        CL_DEVICE_TYPE_CPU, null, null, null);
+            }
 
-            // Получаем устройство
+            // Получаем устройство из контекста
             cl_device_id[] devices = new cl_device_id[1];
             clGetContextInfo(context, CL_CONTEXT_DEVICES,
                     Sizeof.cl_device_id, Pointer.to(devices), null);
 
-            if (devices[0] == null) {
-                throw new RuntimeException("GPU device not found");
-            }
+            // Получаем информацию о выбранном устройстве
+            long[] size = new long[1];
+
+            // Имя выбранного устройства
+            clGetDeviceInfo(devices[0], CL_DEVICE_NAME, 0, null, size);
+            byte[] deviceNameBytes = new byte[(int)size[0]];
+            clGetDeviceInfo(devices[0], CL_DEVICE_NAME, deviceNameBytes.length, Pointer.to(deviceNameBytes), null);
+            String deviceName = new String(deviceNameBytes, 0, deviceNameBytes.length - 1);
+
+            log.debug("Выбрано устройство: {}", deviceName);
 
             // Создаем очередь команд
             commandQueue = clCreateCommandQueue(context, devices[0], 0, null);
@@ -161,19 +307,28 @@ public class GPUImageProcessor {
             int buildError = clBuildProgram(program, 0, null, null, null, null);
             if (buildError != CL_SUCCESS) {
                 // Получаем сообщение об ошибке
-                byte[] buffer = new byte[1024];
+                byte[] buffer = new byte[10240];
                 clGetProgramBuildInfo(program, devices[0],
                         CL_PROGRAM_BUILD_LOG, buffer.length, Pointer.to(buffer), null);
                 String buildLog = new String(buffer);
-                log.error("Build log: {}", buildLog);
+                log.error("Ошибка компиляции OpenCL программы:");
+                log.error("{}", buildLog.trim());
                 throw new RuntimeException("OpenCL program build failed: " + buildError);
             }
 
             // Создаем ядра
             convolutionKernel = clCreateKernel(program, "convolution", null);
+            if (convolutionKernel == null) {
+                throw new RuntimeException("Не удалось создать ядро convolution");
+            }
+
             downscaleKernel = clCreateKernel(program, "downscale", null);
+            if (downscaleKernel == null) {
+                throw new RuntimeException("Не удалось создать ядро downscale");
+            }
 
             log.info("OpenCL успешно инициализирован");
+            log.info("Используется устройство: {}", deviceName);
 
         } catch (Exception e) {
             log.error("Ошибка инициализации OpenCL", e);
