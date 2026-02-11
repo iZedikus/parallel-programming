@@ -57,7 +57,7 @@ public class GPUImageProcessor {
                         }
                        \s
                         int outputIndex = (y * width + x) * totalChannels + channelOffset;
-                        output[outputIndex] = clamp(sum, 0.0f, 1.0f);
+                        output[outputIndex] = 1.0f;
                     }
                     
                     __kernel void downscale(

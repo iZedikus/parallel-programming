@@ -1,0 +1,3 @@
+dependencies {
+    implementation 'org.jocl:jocl:2.0.6'
+}
