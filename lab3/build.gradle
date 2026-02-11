@@ -2,6 +2,8 @@ dependencies {
     implementation 'org.jocl:jocl:2.0.6'
 }
 
+apply plugin: 'application'
+
 jar {
     manifest {
         attributes(

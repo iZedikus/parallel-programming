@@ -25,4 +25,14 @@ subprojects {
     test {
         useJUnitPlatform()
     }
+
+    task fatJar(type: Jar) {
+        manifest {
+            attributes 'Main-Class': 'ru.stepanov.Main'
+        }
+        archiveBaseName = 'lab3-all'
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+        with jar
+    }
 }
