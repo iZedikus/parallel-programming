@@ -1,9 +1,13 @@
-apply plugin: 'application'
-
-application {
-    mainClass = 'ru.stepanov.Main'
-}
-
 dependencies {
     implementation 'org.jocl:jocl:2.0.6'
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'ru.stepanov.Main',
+                'Implementation-Title': 'GPU Image Processing',
+                'Implementation-Version': project.version
+        )
+    }
 }
