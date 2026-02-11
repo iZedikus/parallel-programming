@@ -223,12 +223,12 @@ public class GPUImageProcessor {
         // Создаем буферы
         cl_mem inputBuffer = clCreateBuffer(context,
                 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-                Sizeof.cl_float * totalSize,
+                (long) Sizeof.cl_float * totalSize,
                 Pointer.to(input), null);
 
         cl_mem outputBuffer = clCreateBuffer(context,
                 CL_MEM_WRITE_ONLY,
-                Sizeof.cl_float * totalSize,
+                (long) Sizeof.cl_float * totalSize,
                 null, null);
 
         cl_mem kernelBuffer = clCreateBuffer(context,
@@ -282,12 +282,12 @@ public class GPUImageProcessor {
         // Создаем буферы
         cl_mem inputBuffer = clCreateBuffer(context,
                 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-                Sizeof.cl_float * input.length,
+                (long) Sizeof.cl_float * input.length,
                 Pointer.to(input), null);
 
         cl_mem outputBuffer = clCreateBuffer(context,
                 CL_MEM_WRITE_ONLY,
-                Sizeof.cl_float * newTotalSize,
+                (long) Sizeof.cl_float * newTotalSize,
                 null, null);
 
         float[] output = new float[newTotalSize];
