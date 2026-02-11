@@ -1,0 +1,15 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="GPUImageProcessorTest" type="Application" factoryName="Application" folderName="lab3">
+    <option name="MAIN_CLASS_NAME" value="ru.stepanov.GPUImageProcessor" />
+    <module name="parallel_programming.lab3.main" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="ru.stepanov.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
