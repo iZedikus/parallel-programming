@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Определяем переменные для удобства: папка для логов и имя файла -->
+    <property name="LOG_DIR" value="./logs" />
+    <property name="APP_LOG_FILE" value="my-app" />
+    <!-- Паттерн (формат) для логов в файле: время, уровень, логгер, сообщение -->
+    <property name="FILE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n" />
+    <!-- Паттерн для консоли (можно сделать покороче, если хотите) -->
+    <property name="CONSOLE_LOG_PATTERN" value="%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n" />
+
+    <!-- ### АППЕНДЕР (ПРИЕМНИК) ДЛЯ ФАЙЛА ### -->
+    <!-- Этот appender будет писать логи в файл с ротацией (разделением на части) -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- Путь к активному файлу лога -->
+        <file>${LOG_DIR}/${APP_LOG_FILE}.log</file>
+
+        <!-- Политика ротации: по размеру и времени -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- Имена архивных файлов. %d - дата, %i - индекс при размере -->
+            <fileNamePattern>${LOG_DIR}/${APP_LOG_FILE}-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!-- Максимальный размер одного файла -->
+            <maxFileSize>10MB</maxFileSize>
+            <!-- Хранить логи за последние 30 дней -->
+            <maxHistory>30</maxHistory>
+            <!-- Общий лимит на все архивы (необязательно) -->
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+
+        <!-- Кодировщик: как форматировать сообщение перед записью -->
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ### АППЕНДЕР ДЛЯ КОНСОЛИ (оставим, но сделаем тихим) ### -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+        <!-- Фильтр: в консоль пишем только WARN и ERROR, чтобы не мешало -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+    </appender>
+
+    <!-- ### ЛОГГЕР ДЛЯ ВАШЕГО ПАКЕТА ### -->
+    <!-- Это самое главное. Указываем ваш пакет, где лежат классы FetalHealthML и др. -->
+    <!-- additivity="false" значит, что логи этого логгера НЕ будут дублироваться в корневой (root) логгер -->
+    <logger name="ru.stepanov" level="DEBUG" additivity="false">
+        <!-- И направляем их ТОЛЬКО в файловый appender -->
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- ### КОРНЕВОЙ ЛОГГЕР (ДЛЯ ВСЕХ ОСТАЛЬНЫХ, ВКЛЮЧАЯ SPARK) ### -->
+    <root level="INFO">
+        <!-- Все, что не попало в ru.stepanov (т.е. Spark и библиотеки), пишется в консоль -->
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>
