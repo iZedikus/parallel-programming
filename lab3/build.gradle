@@ -1,15 +1,25 @@
-dependencies {
-    implementation 'org.jocl:jocl:2.0.6'
-}
-
 apply plugin: 'application'
 
 jar {
     manifest {
         attributes(
-                'Main-Class': 'ru.stepanov.Main',
+                'Main-Class': 'ru.stepanov.OpenCLImageProcessor',
                 'Implementation-Title': 'GPU Image Processing',
                 'Implementation-Version': project.version
         )
     }
+}
+
+dependencies {
+    implementation 'org.jocl:jocl:2.0.6'
+}
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Main-Class': 'ru.stepanov.OpenCLImageProcessor'
+    }
+    archiveBaseName = 'lab3-opencl-all'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
 }

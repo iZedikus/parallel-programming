@@ -12,7 +12,9 @@ import org.jocl.cl_mem;
 import org.jocl.cl_platform_id;
 import org.jocl.cl_program;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.File;
 
 import static org.jocl.CL.CL_CONTEXT_DEVICES;
 import static org.jocl.CL.CL_CONTEXT_PLATFORM;
@@ -63,7 +65,7 @@ import static org.jocl.CL.clReleaseProgram;
 import static org.jocl.CL.clSetKernelArg;
 
 @Slf4j
-public class GPUImageProcessor {
+public class OpenCLImageProcessor {
 
     private cl_context context;
     private cl_command_queue commandQueue;
@@ -172,7 +174,7 @@ public class GPUImageProcessor {
                         }
                     }""";
 
-    public GPUImageProcessor() {
+    public OpenCLImageProcessor() {
         initOpenCL();
     }
 
@@ -587,5 +589,39 @@ public class GPUImageProcessor {
         if (context != null) clReleaseContext(context);
 
         log.info("Ресурсы OpenCL освобождены");
+    }
+
+    public static void main(String[] args) {
+        if (args.length < 2) {
+            System.out.println("Использование:");
+            System.out.println("java -jar gpu-image-processing.jar <входной файл> <выходной файл>");
+            return;
+        }
+
+        String inputPath = args[0];
+        String outputPath = args[1];
+
+        try {
+            log.info("Загрузка изображения: {}", inputPath);
+
+            File inputFile = new File(inputPath);
+            BufferedImage inputImage = ImageIO.read(inputFile);
+
+            log.info("Размер изображения: {}x{}",
+                    inputImage.getWidth(), inputImage.getHeight());
+
+            OpenCLImageProcessor processor = new OpenCLImageProcessor();
+            BufferedImage outputImage = processor.processImage(inputImage);
+
+            File outputFile = new File(outputPath);
+            ImageIO.write(outputImage, "jpg", outputFile);
+
+            log.info("Изображение сохранено: {}", outputPath);
+
+            processor.cleanup();
+
+        } catch (Exception e) {
+            log.error("Ошибка обработки изображения", e);
+        }
     }
 }
